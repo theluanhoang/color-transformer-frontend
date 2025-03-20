@@ -31,7 +31,7 @@ function ColorTransformer({ isDarkMode = false }) {
     formData.append("target_file", targetImage);
 
     try {
-      const response = await axios.post("http://localhost:8000/upload/", formData, {
+      const response = await axios.post("https://color-transformer-api.onrender.com/upload/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob",
       });
