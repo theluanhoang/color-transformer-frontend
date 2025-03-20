@@ -39,7 +39,7 @@ function ColorTransformer({ isDarkMode = false }) {
       const imageUrl = URL.createObjectURL(response.data);
       setOutputImage(imageUrl);
     } catch (error) {
-      toast.error("Lỗi khi upload ảnh!", {
+      toast.error(`Lỗi khi upload ảnh: ${error.message}`, {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
