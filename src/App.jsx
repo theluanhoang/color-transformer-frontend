@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import "react-toastify/dist/ReactToastify.css";
 import ColorTransformer from "./components/ColorTransformer";
@@ -14,6 +15,11 @@ function App() {
     setIsDarkMode(newMode);
     localStorage.setItem("themeMode", newMode ? "dark" : "light");
   };
+
+  const handleTest = async () => {
+    const res = await axios.get("https://color-transformer-api.onrender.com/");
+    alert(res.data.message)
+  }
 
   // Đảm bảo Tailwind CSS nhận diện dark mode
   useEffect(() => {
@@ -45,6 +51,14 @@ function App() {
           >
             {isDarkMode ? "🌙" : "☀️"}
           </span>
+        </button>
+        <button
+          onClick={handleTest}
+          className={`relative w-16 h-8 sm:w-20 sm:h-10 rounded-full p-1 transition-colors duration-300 focus:outline-none ${
+            isDarkMode ? "bg-black" : "bg-orange-500"
+          }`}
+        >
+          {"GET MESSAGE"}
         </button>
       </div>
       <ColorTransformer isDarkMode={isDarkMode} />

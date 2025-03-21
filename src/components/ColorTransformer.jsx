@@ -3,8 +3,7 @@ import { useState } from "react";
 import { Bounce, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const API_URL = "https://color-transformer-api.onrender.com"
-// const API_URL = "http://localhost:8000"
+const API_URL = "https://color-transformer-api.onrender.com";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 function ColorTransformer({ isDarkMode = false }) {
@@ -13,6 +12,7 @@ function ColorTransformer({ isDarkMode = false }) {
   const [outputImage, setOutputImage] = useState(null);
   const [overlayImage, setOverlayImage] = useState(null);
   const [openAccordion, setOpenAccordion] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // Thêm trạng thái loading
 
   const handleUpload = async () => {
     if (!sourceImage || !targetImage) {
@@ -29,7 +29,6 @@ function ColorTransformer({ isDarkMode = false }) {
       return;
     }
 
-    // Kiểm tra kích thước file
     if (sourceImage.size > MAX_FILE_SIZE || targetImage.size > MAX_FILE_SIZE) {
       toast.error("Kích thước ảnh vượt quá 5MB!", {
         position: "top-right",
@@ -48,12 +47,15 @@ function ColorTransformer({ isDarkMode = false }) {
     formData.append("source_file", sourceImage);
     formData.append("target_file", targetImage);
 
+    setIsLoading(true); // Bật loading
     try {
+      console.log("Sending request to:", `${API_URL}/upload/`);
       const response = await axios.post(`${API_URL}/upload/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob",
-        timeout: 60000, // Timeout 60 giây
+        timeout: 120000, // Tăng timeout lên 120 giây vì Render có thể chậm
       });
+      console.log("Response received:", response.status);
 
       const imageUrl = URL.createObjectURL(response.data);
       setOutputImage(imageUrl);
@@ -72,8 +74,11 @@ function ColorTransformer({ isDarkMode = false }) {
       let errorMessage = "Lỗi không xác định";
       if (error.response) {
         errorMessage = `Server trả về lỗi: ${error.response.status}`;
+        if (error.response.status === 503) {
+          errorMessage = "Server đang khởi động, vui lòng thử lại sau vài giây.";
+        }
       } else if (error.request) {
-        errorMessage = "Không thể kết nối đến server. Kiểm tra mạng hoặc URL.";
+        errorMessage = "Không thể kết nối đến server. Kiểm tra mạng hoặc server.";
       } else {
         errorMessage = error.message;
       }
@@ -89,6 +94,8 @@ function ColorTransformer({ isDarkMode = false }) {
         transition: Bounce,
       });
       console.error("Lỗi khi upload: ", error);
+    } finally {
+      setIsLoading(false); // Tắt loading
     }
   };
 
@@ -126,7 +133,6 @@ function ColorTransformer({ isDarkMode = false }) {
     setOpenAccordion(openAccordion === section ? null : section);
   };
 
-  // Phần JSX giữ nguyên như code của bạn
   return (
     <div
       className={`min-h-screen ${
@@ -161,6 +167,7 @@ function ColorTransformer({ isDarkMode = false }) {
                   ? "file:bg-gray-700 file:text-blue-300 hover:file:bg-gray-600"
                   : "file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               }`}
+              disabled={isLoading}
             />
             <h4
               className={`mt-1 sm:mt-2 text-sm sm:text-lg font-medium ${
@@ -182,6 +189,7 @@ function ColorTransformer({ isDarkMode = false }) {
                   ? "file:bg-gray-700 file:text-blue-300 hover:file:bg-gray-600"
                   : "file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               }`}
+              disabled={isLoading}
             />
             <h4
               className={`mt-1 sm:mt-2 text-sm sm:text-lg font-medium ${
@@ -200,9 +208,12 @@ function ColorTransformer({ isDarkMode = false }) {
               isDarkMode
                 ? "bg-blue-500 hover:bg-blue-600"
                 : "bg-blue-600 hover:bg-blue-700"
-            } text-white font-semibold py-1 sm:py-2 px-3 sm:px-6 rounded-full transition duration-300 cursor-pointer text-xs sm:text-base`}
+            } text-white font-semibold py-1 sm:py-2 px-3 sm:px-6 rounded-full transition duration-300 cursor-pointer text-xs sm:text-base ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isLoading}
           >
-            Upload & Chuyển đổi
+            {isLoading ? "Đang xử lý..." : "Upload & Chuyển đổi"}
           </button>
         </div>
         {/* Image Preview Section */}
