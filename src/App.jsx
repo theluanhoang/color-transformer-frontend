@@ -17,7 +17,11 @@ function App() {
   };
 
   const handleTest = async () => {
-    const res = await axios.get("https://color-transformer-api.onrender.com/");
+    const res = await axios.post("https://color-transformer-api.onrender.com/",
+      "Luan"
+    , {
+      headers: { "Content-Type": "application/json" }, // Đảm bảo gửi JSON
+    });
     alert(res.data.message)
   }
 
