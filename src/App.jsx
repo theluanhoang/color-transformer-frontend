@@ -1,22 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "react-toastify/dist/ReactToastify.css";
 import ColorTransformer from "./components/ColorTransformer";
 
 function App() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  // Khởi tạo state từ localStorage, mặc định là false (light mode)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("themeMode") === "dark";
+  });
 
+  // Hàm toggle dark/light mode
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    localStorage.setItem("themeMode", newMode ? "dark" : "light");
   };
+
+  // Đảm bảo Tailwind CSS nhận diện dark mode
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
 
   return (
     <>
-      <button
-        onClick={toggleDarkMode}
-        className={`fixed top-2 sm:top-4 right-2 sm:right-4 z-50 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 font-semibold py-1 px-2 sm:py-1 sm:px-3 md:py-2 md:px-4 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition duration-300 cursor-pointer text-xs sm:text-sm md:text-base`}
-      >
-        {isDarkMode ? "☀️ Light" : "🌙 Dark"}
-      </button>
+      <div className="fixed top-2 sm:top-4 right-2 sm:right-4 z-50">
+        <button
+          onClick={toggleDarkMode}
+          className={`relative w-16 h-8 sm:w-20 sm:h-10 rounded-full p-1 transition-colors duration-300 focus:outline-none ${
+            isDarkMode ? "bg-black" : "bg-orange-500"
+          }`}
+        >
+          <div
+            className={`absolute top-1 left-1 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white transition-transform duration-300 transform ${
+              isDarkMode ? "translate-x-8 sm:translate-x-10" : "translate-x-0"
+            }`}
+          />
+          <span
+            className={`absolute top-1/2 transform -translate-y-1/2 ${
+              isDarkMode ? "left-2" : "right-2"
+            } text-white text-lg sm:text-xl`}
+          >
+            {isDarkMode ? "🌙" : "☀️"}
+          </span>
+        </button>
+      </div>
       <ColorTransformer isDarkMode={isDarkMode} />
     </>
   );

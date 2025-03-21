@@ -3,6 +3,10 @@ import { useState } from "react";
 import { Bounce, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+// const API_URL = "https://color-transformer-api.onrender.com"
+const API_URL = "http://localhost:8000"
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 function ColorTransformer({ isDarkMode = false }) {
   const [sourceImage, setSourceImage] = useState(null);
   const [targetImage, setTargetImage] = useState(null);
@@ -19,7 +23,21 @@ function ColorTransformer({ isDarkMode = false }) {
         closeOnClick: false,
         pauseOnHover: true,
         draggable: true,
-        progress: undefined,
+        theme: isDarkMode ? "dark" : "light",
+        transition: Bounce,
+      });
+      return;
+    }
+
+    // Kiểm tra kích thước file
+    if (sourceImage.size > MAX_FILE_SIZE || targetImage.size > MAX_FILE_SIZE) {
+      toast.error("Kích thước ảnh vượt quá 5MB!", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
         theme: isDarkMode ? "dark" : "light",
         transition: Bounce,
       });
@@ -31,22 +49,42 @@ function ColorTransformer({ isDarkMode = false }) {
     formData.append("target_file", targetImage);
 
     try {
-      const response = await axios.post("https://color-transformer-api.onrender.com/upload/", formData, {
+      const response = await axios.post(`${API_URL}/upload/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         responseType: "blob",
+        timeout: 60000, // Timeout 60 giây
       });
 
       const imageUrl = URL.createObjectURL(response.data);
       setOutputImage(imageUrl);
+
+      toast.success("Chuyển đổi thành công!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        theme: isDarkMode ? "dark" : "light",
+        transition: Bounce,
+      });
     } catch (error) {
-      toast.error(`Lỗi khi upload ảnh: ${error.message}`, {
+      let errorMessage = "Lỗi không xác định";
+      if (error.response) {
+        errorMessage = `Server trả về lỗi: ${error.response.status}`;
+      } else if (error.request) {
+        errorMessage = "Không thể kết nối đến server. Kiểm tra mạng hoặc URL.";
+      } else {
+        errorMessage = error.message;
+      }
+
+      toast.error(`Lỗi khi upload ảnh: ${errorMessage}`, {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
         closeOnClick: false,
         pauseOnHover: true,
         draggable: true,
-        progress: undefined,
         theme: isDarkMode ? "dark" : "light",
         transition: Bounce,
       });
@@ -79,7 +117,6 @@ function ColorTransformer({ isDarkMode = false }) {
       closeOnClick: false,
       pauseOnHover: true,
       draggable: true,
-      progress: undefined,
       theme: isDarkMode ? "dark" : "light",
       transition: Bounce,
     });
@@ -89,6 +126,7 @@ function ColorTransformer({ isDarkMode = false }) {
     setOpenAccordion(openAccordion === section ? null : section);
   };
 
+  // Phần JSX giữ nguyên như code của bạn
   return (
     <div
       className={`min-h-screen ${
